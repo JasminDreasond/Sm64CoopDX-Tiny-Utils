@@ -11,14 +11,21 @@ local pauseMenuMusicRGBA = { 200, 200, 200, 255 }
 
 --Below here is just a bunch of internal stuff.
 local curMap = -1
+local curAreaSeqId = -1
+local curCourseNum = -1
+local curActNum = -1
+local curAreaIndex = -1
+
 local audioMainPaused = false
 local forceStopGameSongs = false
 local stopSongOnSelectStars = false
 
-local audioMain = nil    -- Used for the main audio
-local audioSpecial = nil -- Used for things like cap music
+local activeMainId = nil
+local audioMain = nil
+-- Used for the main audio
+local audioSpecial = nil          -- Used for things like cap music
 local sampleSelectStarSound = nil -- Used for the select star audio
-local sampleLoseSound = nil -- Used for the mario die time
+local sampleLoseSound = nil       -- Used for the mario die time
 
 
 local audioCurSeq = nil
@@ -77,8 +84,23 @@ end
 --- @param data ObjectList
 function tsjSongs.addSong(id, stream, data)
 	bgms[id] = data
----@diagnostic disable-next-line: undefined-field
+	---@diagnostic disable-next-line: undefined-field
 	streams[id] = stream
+end
+
+-- Registers a new sub song
+--- @param id string | number | integer
+--- @param areaIndex string | number | integer
+--- @param actNum string | number | integer
+--- @param courseNum string | number | integer
+--- @param areaSeqId string | number | integer
+--- @param data ObjectList
+function tsjSongs.addSubSong(id, areaIndex, actNum, courseNum, areaSeqId, stream, data)
+	local superId = tostring(id) ..
+		"-" .. tostring(areaIndex) "-" .. tostring(actNum) "-" .. tostring(courseNum) "-" .. tostring(areaSeqId)
+	bgms[superId] = data
+	---@diagnostic disable-next-line: undefined-field
+	streams[superId] = stream
 end
 
 -- Load the song
@@ -89,9 +111,11 @@ function tsjSongs.loadSong(index)
 		if (audioMain ~= nil) then
 			audio_stream_set_looping(audioMain, true)
 			audio_stream_play(audioMain, true, bgms[index].volume)
+			activeMainId = index
 		else
-			djui_popup_create('Missing audio!: ' .. bgms[curMap].name, 10)
-			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].name)
+			djui_popup_create('Missing audio!: ' .. bgms[index].name, 10)
+			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[index].name)
+			activeMainId = nil
 		end
 	end
 end
@@ -101,6 +125,7 @@ function tsjSongs.stopSong()
 	if (audioMain ~= nil) then
 		audio_stream_stop(audioMain)
 		audioMain = nil
+		activeMainId = nil
 	end
 end
 
@@ -113,8 +138,8 @@ function tsjSongs.loadSpecialSong(index)
 			audio_stream_set_looping(audioSpecial, true)
 			audio_stream_play(audioSpecial, true, bgms[index].volume)
 		else
-			djui_popup_create('Missing audio!: ' .. bgms[curMap].name, 10)
-			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].name)
+			djui_popup_create('Missing audio!: ' .. bgms[index].name, 10)
+			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[index].name)
 		end
 	end
 end
@@ -127,7 +152,7 @@ function tsjSongs.stopSpecialSong()
 
 		if (audioMain ~= nil and audioMainPaused == true) then
 			audioMainPaused = false
-			audio_stream_play(audioMain, false, bgms[curMap].volume)
+			audio_stream_play(audioMain, false, bgms[activeMainId].volume)
 		else
 			set_background_music(0, audioCurSeq, 10)
 		end
@@ -139,7 +164,7 @@ local function handleMusic()
 	--          Force stop game songs                   --
 	------------------------------------------------------
 	if forceStopGameSongs then
-		for i=0,38,1 do
+		for i = 0, 38, 1 do
 			stop_background_music(SEQ_LEVEL_INSIDE_CASTLE)
 			stop_background_music(SEQ_LEVEL_GRASS)
 			stop_background_music(SEQ_EVENT_BOSS)
@@ -164,23 +189,77 @@ local function handleMusic()
 	------------------------------------------------------
 	if sampleSelectStarSound ~= nil and get_current_background_music() == SEQ_MENU_STAR_SELECT then
 		stop_background_music(SEQ_MENU_STAR_SELECT)
-		if(stopSongOnSelectStars) then
+		if (stopSongOnSelectStars) then
 			tsjSongs.stopSpecialSong()
 			tsjSongs.stopSong()
 		end
 		audio_sample_play(sampleSelectStarSound, gMarioStates[0].marioObj.header.gfx.cameraToObject, 2)
-    end
+	end
 	------------------------------------------------------
 	--          Handle stopping/starting of music       --
 	------------------------------------------------------
 	--Handle main course music
-	if (curMap ~= gNetworkPlayers[marioIndex].currLevelNum and gMarioStates[marioIndex].area.macroObjects ~= nil) then
-		curMap = gNetworkPlayers[marioIndex].currLevelNum
+	local newIndex = nil
+	local needChangeSong = false
+	local needPrepareChangeSong = false
+
+	-- Check curMap
+	if (gMarioStates[marioIndex].area.macroObjects ~= nil) then
+		if (curMap ~= gNetworkPlayers[marioIndex].currLevelNum) then
+			curMap = gNetworkPlayers[marioIndex].currLevelNum
+			newIndex = curMap
+			needChangeSong = true
+		end
+
+		-- Check areaSqId
+		if (curAreaSeqId ~= gNetworkPlayers[marioIndex].currLevelAreaSeqId) then
+			curAreaSeqId = gNetworkPlayers[marioIndex].currLevelAreaSeqId
+			needPrepareChangeSong = true
+		end
+
+		-- Check curseNumber
+		if (curCourseNum ~= gNetworkPlayers[marioIndex].currCourseNum) then
+			curCourseNum = gNetworkPlayers[marioIndex].currCourseNum
+			needPrepareChangeSong = true
+		end
+
+		-- Check actNum
+		if (curActNum ~= gNetworkPlayers[marioIndex].currActNum) then
+			curActNum = gNetworkPlayers[marioIndex].currActNum
+			needPrepareChangeSong = true
+		end
+
+		-- Check areaIndex
+		if (curAreaIndex ~= gNetworkPlayers[marioIndex].currAreaIndex) then
+			curAreaIndex = gNetworkPlayers[marioIndex].currAreaIndex
+			needPrepareChangeSong = true
+		end
+	end
+
+	-- Exist sub song?
+	if (needPrepareChangeSong) then
+		local superId = tostring(curMap) ..
+			"-" ..
+			tostring(curAreaSeqId) ..
+			"-" .. tostring(curCourseNum) .. "-" .. tostring(curActNum) .. "-" .. tostring(curAreaIndex)
+		if (superId ~= activeMainId) then
+			if (bgms[superId] ~= nil and bgms[superId].name ~= nil) then
+				newIndex = superId
+				needChangeSong = true
+			elseif (curMap ~= activeMainId) then
+				newIndex = curMap
+				needChangeSong = true
+			end
+		end
+	end
+
+	-- Request new song
+	if (needChangeSong) then
 		audioCurSeq = get_current_background_music()
 		tsjSongs.stopSong()
-		if (bgms[curMap] ~= nil and bgms[curMap].name ~= nil) then
+		if (bgms[newIndex] ~= nil and bgms[newIndex].name ~= nil) then
 			set_background_music(0, 0, 0)
-			tsjSongs.loadSong(curMap)
+			tsjSongs.loadSong(newIndex)
 		else
 			print("No audio for this map, so not stopping default: " .. curMap)
 		end
@@ -208,8 +287,8 @@ local function handleMusic()
 	------------------------------------------------------
 	if (audioMain ~= nil and audioMain.loaded) then
 		local curPosition = audio_stream_get_position(audioMain)
-		if (curPosition >= bgms[curMap].loopEnd) then
-			local minus = bgms[curMap].loopStart - bgms[curMap].loopEnd
+		if (curPosition >= bgms[activeMainId].loopEnd) then
+			local minus = bgms[activeMainId].loopStart - bgms[activeMainId].loopEnd
 			audio_stream_set_position(audioMain, curPosition - math.abs(minus))
 		end
 	end
@@ -234,16 +313,21 @@ local function hud_render()
 		local scale = 1
 
 		djui_hud_set_color(pauseMenuMusicRGBA[1], pauseMenuMusicRGBA[2], pauseMenuMusicRGBA[3], pauseMenuMusicRGBA[4]);
-		djui_hud_print_text("Level ID: " .. gNetworkPlayers[0].currLevelNum, x, y, scale);
+		djui_hud_print_text("Tiny Script - Song API", x, y, scale);
+		djui_hud_print_text("Level ID: " .. curMap, x, y - 30, scale);
+		djui_hud_print_text("Level  Area Seq ID: " .. curAreaSeqId, x, y - 60, scale);
+		djui_hud_print_text("Course Number: " .. curCourseNum, x, y - 90, scale);
+		djui_hud_print_text("Current Act Number: " .. curActNum, x, y - 120, scale);
+		djui_hud_print_text("Current Area Index: " .. curAreaIndex, x, y - 150, scale);
 
 		if (audioMain ~= nil) then
-			djui_hud_print_text("Song: " .. bgms[curMap].name, x, y - 30, scale);
-			djui_hud_print_text("Song loaded: " .. tostring(audioMain.loaded), x, y - 60, scale);
+			djui_hud_print_text("Song: " .. bgms[activeMainId].name, x, y - 180, scale);
+			djui_hud_print_text("Song loaded: " .. tostring(audioMain.loaded), x, y - 210, scale);
 		end
 
 		if (audioSpecial ~= nil) then
-			djui_hud_print_text("Special Song: " .. bgms[-2].name, x, y - 90, scale);
-			djui_hud_print_text("Special Song loaded: " .. tostring(audioSpecial.loaded), x, y - 120, scale);
+			djui_hud_print_text("Special Song: " .. bgms[-2].name, x, y - 240, scale);
+			djui_hud_print_text("Special Song loaded: " .. tostring(audioSpecial.loaded), x, y - 270, scale);
 		end
 	end
 end
@@ -264,7 +348,7 @@ local deathTable = {
 
 local function on_set_mario_action(m)
 	if sampleLoseSound ~= nil and deathTable[m.action] then
-			audio_sample_play(sampleLoseSound, {x = 0, y = 0, z = 0}, 2)
+		audio_sample_play(sampleLoseSound, { x = 0, y = 0, z = 0 }, 2)
 	end
 end
 
@@ -289,4 +373,4 @@ local function song_debug_command(msg)
 	return false
 end
 
-hook_chat_command("songdebug", "[on|off] ", song_debug_command)
+hook_chat_command("lvlinfodebug", "[on|off] ", song_debug_command)
