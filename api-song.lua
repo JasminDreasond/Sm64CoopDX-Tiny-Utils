@@ -6,7 +6,7 @@
 
 --Don't know what course ID to put for a map? No worries. Just turn this to true, and the pause menu will show the course number in the corner.
 --Feel free to turn this off if (you don't want to show the music name in the pause menu
-local pauseMenuShouldShowSongData = true
+local pauseMenuShouldShowSongData = false
 local pauseMenuMusicRGBA = { 200, 200, 200, 255 }
 
 --Below here is just a bunch of internal stuff.
@@ -165,6 +165,7 @@ local function handleMusic()
 	if sampleSelectStarSound ~= nil and get_current_background_music() == SEQ_MENU_STAR_SELECT then
 		stop_background_music(SEQ_MENU_STAR_SELECT)
 		if(stopSongOnSelectStars) then
+			tsjSongs.stopSpecialSong()
 			tsjSongs.stopSong()
 		end
 		audio_sample_play(sampleSelectStarSound, gMarioStates[0].marioObj.header.gfx.cameraToObject, 2)
