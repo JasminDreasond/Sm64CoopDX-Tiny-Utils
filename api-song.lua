@@ -12,6 +12,7 @@ local pauseMenuMusicRGBA = { 200, 200, 200, 255 }
 --Below here is just a bunch of internal stuff.
 local curMap = -1
 local audioMainPaused = false
+local forceStopGameSongs = false
 
 local audioMain = nil    -- Used for the main audio
 local audioSpecial = nil -- Used for things like cap music
@@ -32,6 +33,7 @@ _G.tsjSongs = {}
 
 --- @type TinySongBgms
 local bgms = {}
+
 local streams = {}
 local streamsStar = {}
 local streamsLose = {}
@@ -74,8 +76,8 @@ function tsjSongs.loadSong(index)
 			audio_stream_set_looping(audioMain, true)
 			audio_stream_play(audioMain, true, bgms[index].volume)
 		else
-			djui_popup_create('Missing audio!: ' .. bgms[curMap].audio, 10)
-			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].audio)
+			djui_popup_create('Missing audio!: ' .. bgms[curMap].name, 10)
+			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].name)
 		end
 	end
 end
@@ -97,8 +99,8 @@ function tsjSongs.loadSpecialSong(index)
 			audio_stream_set_looping(audioSpecial, true)
 			audio_stream_play(audioSpecial, true, bgms[index].volume)
 		else
-			djui_popup_create('Missing audio!: ' .. bgms[curMap].audio, 10)
-			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].audio)
+			djui_popup_create('Missing audio!: ' .. bgms[curMap].name, 10)
+			print("Attempted to load filed audio file, but couldn't find it on the system: " .. bgms[curMap].name)
 		end
 	end
 end
@@ -120,6 +122,30 @@ end
 
 local function handleMusic()
 	------------------------------------------------------
+	--          Force stop game songs                   --
+	------------------------------------------------------
+	if forceStopGameSongs then
+		for i=0,38,1 do
+			stop_background_music(SEQ_LEVEL_INSIDE_CASTLE)
+			stop_background_music(SEQ_LEVEL_GRASS)
+			stop_background_music(SEQ_EVENT_BOSS)
+			stop_background_music(SEQ_EVENT_POWERUP)
+			stop_background_music(SEQ_EVENT_METAL_CAP)
+			stop_background_music(SEQ_EVENT_RACE)
+			stop_background_music(SEQ_LEVEL_SLIDE)
+			stop_background_music(SEQ_LEVEL_SNOW)
+			stop_background_music(SEQ_LEVEL_KOOPA_ROAD)
+			stop_background_music(SEQ_LEVEL_BOSS_KOOPA_FINAL)
+			stop_background_music(SEQ_LEVEL_HOT)
+			stop_background_music(SEQ_LEVEL_SPOOKY)
+			stop_background_music(SEQ_LEVEL_WATER)
+			stop_background_music(SEQ_LEVEL_BOSS_KOOPA)
+			stop_background_music(SEQ_LEVEL_UNDERGROUND)
+			stop_background_music(SEQ_LEVEL_BOSS_KOOPA_FINAL)
+		end
+	end
+
+	------------------------------------------------------
 	--          Selec start music                       --
 	------------------------------------------------------
 	if sampleSelectStarSound ~= nil and get_current_background_music() == SEQ_MENU_STAR_SELECT then
@@ -134,7 +160,7 @@ local function handleMusic()
 		curMap = gNetworkPlayers[marioIndex].currLevelNum
 		audioCurSeq = get_current_background_music()
 		tsjSongs.stopSong()
-		if (bgms[curMap] ~= nil and bgms[curMap].audio ~= nil) then
+		if (bgms[curMap] ~= nil and bgms[curMap].name ~= nil) then
 			set_background_music(0, 0, 0)
 			tsjSongs.loadSong(curMap)
 		else
