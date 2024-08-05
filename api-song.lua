@@ -13,11 +13,13 @@ local pauseMenuMusicRGBA = { 200, 200, 200, 255 }
 local curMap = -1
 local audioMainPaused = false
 local forceStopGameSongs = false
+local stopSongOnSelectStars = false
 
 local audioMain = nil    -- Used for the main audio
 local audioSpecial = nil -- Used for things like cap music
 local sampleSelectStarSound = nil -- Used for the select star audio
 local sampleLoseSound = nil -- Used for the mario die time
+
 
 local audioCurSeq = nil
 local marioIndex = 0
@@ -56,6 +58,18 @@ end
 
 function tsjSongs.setLoseSound(id)
 	sampleLoseSound = streamsLose[id]
+end
+
+-- Set if it forces to stop all the original songs of the game.
+--- @param value boolean
+function tsjSongs.setForceStopGameSongs(value)
+	forceStopGameSongs = value
+end
+
+-- Set if it forces to stop all the original songs of the select star screen.
+--- @param value boolean
+function tsjSongs.setStopSongOnSelectStars(value)
+	stopSongOnSelectStars = value
 end
 
 -- Registers a new song
@@ -150,6 +164,9 @@ local function handleMusic()
 	------------------------------------------------------
 	if sampleSelectStarSound ~= nil and get_current_background_music() == SEQ_MENU_STAR_SELECT then
 		stop_background_music(SEQ_MENU_STAR_SELECT)
+		if(stopSongOnSelectStars) then
+			tsjSongs.stopSong()
+		end
 		audio_sample_play(sampleSelectStarSound, gMarioStates[0].marioObj.header.gfx.cameraToObject, 2)
     end
 	------------------------------------------------------
