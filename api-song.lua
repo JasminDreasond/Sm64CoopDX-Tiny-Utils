@@ -93,11 +93,10 @@ end
 --- @param areaIndex string | number | integer
 --- @param actNum string | number | integer
 --- @param courseNum string | number | integer
---- @param areaSeqId string | number | integer
 --- @param data ObjectList
-function tsjSongs.addSubSong(id, areaIndex, actNum, courseNum, areaSeqId, stream, data)
+function tsjSongs.addSubSong(id, areaIndex, actNum, courseNum, stream, data)
 	local superId = tostring(id) ..
-		"-" .. tostring(areaIndex) "-" .. tostring(actNum) "-" .. tostring(courseNum) "-" .. tostring(areaSeqId)
+		"-" .. tostring(areaIndex) .. "-" .. tostring(actNum) .. "-" .. tostring(courseNum)
 	bgms[superId] = data
 	---@diagnostic disable-next-line: undefined-field
 	streams[superId] = stream
@@ -204,44 +203,42 @@ local function handleMusic()
 	local needPrepareChangeSong = false
 
 	-- Check curMap
-	if (gMarioStates[marioIndex].area.macroObjects ~= nil) then
-		if (curMap ~= gNetworkPlayers[marioIndex].currLevelNum) then
-			curMap = gNetworkPlayers[marioIndex].currLevelNum
-			newIndex = curMap
-			needChangeSong = true
-		end
+	if (gMarioStates[marioIndex].area.macroObjects ~= nil and curMap ~= gNetworkPlayers[marioIndex].currLevelNum) then
+		curMap = gNetworkPlayers[marioIndex].currLevelNum
+		newIndex = curMap
+		needChangeSong = true
+	end
 
-		-- Check areaSqId
-		if (curAreaSeqId ~= gNetworkPlayers[marioIndex].currLevelAreaSeqId) then
-			curAreaSeqId = gNetworkPlayers[marioIndex].currLevelAreaSeqId
-			needPrepareChangeSong = true
-		end
+	-- Check areaSqId
+	if (curAreaSeqId ~= gNetworkPlayers[marioIndex].currLevelAreaSeqId) then
+		curAreaSeqId = gNetworkPlayers[marioIndex].currLevelAreaSeqId
+		needPrepareChangeSong = true
+	end
 
-		-- Check curseNumber
-		if (curCourseNum ~= gNetworkPlayers[marioIndex].currCourseNum) then
-			curCourseNum = gNetworkPlayers[marioIndex].currCourseNum
-			needPrepareChangeSong = true
-		end
+	-- Check curseNumber
+	if (curCourseNum ~= gNetworkPlayers[marioIndex].currCourseNum) then
+		curCourseNum = gNetworkPlayers[marioIndex].currCourseNum
+		needPrepareChangeSong = true
+	end
 
-		-- Check actNum
-		if (curActNum ~= gNetworkPlayers[marioIndex].currActNum) then
-			curActNum = gNetworkPlayers[marioIndex].currActNum
-			needPrepareChangeSong = true
-		end
+	-- Check actNum
+	if (curActNum ~= gNetworkPlayers[marioIndex].currActNum) then
+		curActNum = gNetworkPlayers[marioIndex].currActNum
+		needPrepareChangeSong = true
+	end
 
-		-- Check areaIndex
-		if (curAreaIndex ~= gNetworkPlayers[marioIndex].currAreaIndex) then
-			curAreaIndex = gNetworkPlayers[marioIndex].currAreaIndex
-			needPrepareChangeSong = true
-		end
+	-- Check areaIndex
+	if (curAreaIndex ~= gNetworkPlayers[marioIndex].currAreaIndex) then
+		curAreaIndex = gNetworkPlayers[marioIndex].currAreaIndex
+		needPrepareChangeSong = true
 	end
 
 	-- Exist sub song?
 	if (needPrepareChangeSong) then
 		local superId = tostring(curMap) ..
 			"-" ..
-			tostring(curAreaSeqId) ..
-			"-" .. tostring(curCourseNum) .. "-" .. tostring(curActNum) .. "-" .. tostring(curAreaIndex)
+			tostring(curAreaIndex) ..
+			"-" .. tostring(curActNum) .. "-" .. tostring(curCourseNum)
 		if (superId ~= activeMainId) then
 			if (bgms[superId] ~= nil and bgms[superId].name ~= nil) then
 				newIndex = superId
