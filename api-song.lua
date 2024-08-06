@@ -47,6 +47,37 @@ local streams = {}
 local streamsStar = {}
 local streamsLose = {}
 
+-- Default Songs
+local defaultSongs = {}
+defaultSongs[SEQ_LEVEL_INSIDE_CASTLE] = true
+defaultSongs[SEQ_LEVEL_GRASS] = true
+defaultSongs[SEQ_EVENT_BOSS] = true
+defaultSongs[SEQ_EVENT_POWERUP] = true
+defaultSongs[SEQ_EVENT_METAL_CAP] = true
+defaultSongs[SEQ_EVENT_RACE] = true
+defaultSongs[SEQ_LEVEL_SLIDE] = true
+defaultSongs[SEQ_LEVEL_SNOW] = true
+defaultSongs[SEQ_LEVEL_KOOPA_ROAD] = true
+defaultSongs[SEQ_LEVEL_BOSS_KOOPA_FINAL] = true
+defaultSongs[SEQ_LEVEL_HOT] = true
+defaultSongs[SEQ_LEVEL_SPOOKY] = true
+defaultSongs[SEQ_LEVEL_WATER] = true
+defaultSongs[SEQ_LEVEL_BOSS_KOOPA] = true
+defaultSongs[SEQ_LEVEL_UNDERGROUND] = true
+defaultSongs[SEQ_LEVEL_BOSS_KOOPA_FINAL] = true
+
+-- Enable default song
+--- @param id string | number | integer
+function tsjSongs.enableDefaultSong(id)
+	defaultSongs[id] = true
+end
+
+-- Disable default song
+--- @param id string | number | integer
+function tsjSongs.disableDefaultSong(id)
+	defaultSongs[id] = false
+end
+
 -- Registers the select star sound
 --- @param id string
 function tsjSongs.addSelectStarSound(id, stream)
@@ -162,24 +193,9 @@ local function handleMusic()
 	------------------------------------------------------
 	--          Force stop game songs                   --
 	------------------------------------------------------
-	if forceStopGameSongs then
-		for i = 0, 38, 1 do
-			stop_background_music(SEQ_LEVEL_INSIDE_CASTLE)
-			stop_background_music(SEQ_LEVEL_GRASS)
-			stop_background_music(SEQ_EVENT_BOSS)
-			stop_background_music(SEQ_EVENT_POWERUP)
-			stop_background_music(SEQ_EVENT_METAL_CAP)
-			stop_background_music(SEQ_EVENT_RACE)
-			stop_background_music(SEQ_LEVEL_SLIDE)
-			stop_background_music(SEQ_LEVEL_SNOW)
-			stop_background_music(SEQ_LEVEL_KOOPA_ROAD)
-			stop_background_music(SEQ_LEVEL_BOSS_KOOPA_FINAL)
-			stop_background_music(SEQ_LEVEL_HOT)
-			stop_background_music(SEQ_LEVEL_SPOOKY)
-			stop_background_music(SEQ_LEVEL_WATER)
-			stop_background_music(SEQ_LEVEL_BOSS_KOOPA)
-			stop_background_music(SEQ_LEVEL_UNDERGROUND)
-			stop_background_music(SEQ_LEVEL_BOSS_KOOPA_FINAL)
+	for k, v in pairs(defaultSongs) do
+		if v == false or forceStopGameSongs then
+			stop_background_music(k)
 		end
 	end
 
