@@ -17,9 +17,13 @@ _G.tsjSongs.setStopSongOnStarSelector(true)
 _G.tsjSongs.addSong(-2, audio_stream_load('prototype.ogg'),
 	{ loopEnd = 441144, loopStart = 0.5, volume = 1.25, name = "Prototype" })
 
--- Add custom song
+-- Add custom song (id)
 _G.tsjSongs.addSong(9, audio_stream_load('strangetown.ogg'),
 	{ loopEnd = 3175889, loopStart = 0.5, volume = 1, name = "Strangetown" })
+
+-- Add custom song (id, areaIndex, actNum, courseNum)
+_G.tsjSongs.addSubSong(6, 3, 0, 0, audio_stream_load('strangetown_beta.ogg'),
+	{ loopEnd = 3175430, loopStart = 0.5, volume = 1, name = "Strangetown Prototype" })
 
 -- Add custom sound into the select star sound effect
 _G.tsjSongs.addSelectStarSound('SAMPLE_STAR_SELECT_SIMS', audio_sample_load('star_select_sims.ogg'))
