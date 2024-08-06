@@ -41,3 +41,5 @@ Songs for each type of power up.
 The song calms down when the mario sleeps.
 
 Test the plant sleep theme moment.
+
+Test in boss battle.
