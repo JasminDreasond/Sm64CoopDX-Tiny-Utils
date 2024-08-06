@@ -75,7 +75,7 @@ end
 
 -- Set if it forces to stop all the original songs of the select star screen.
 --- @param value boolean
-function tsjSongs.setStopSongOnSelectStars(value)
+function tsjSongs.setStopSongOnStarSelector(value)
 	stopSongOnSelectStars = value
 end
 
