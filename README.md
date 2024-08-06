@@ -1,6 +1,8 @@
 # Sm64CoopDX-Tiny-Utils
 Tiny lib of useful API codes to start moding Sm64CoopDX.
 
+https://github.com/coop-deluxe/sm64coopdx
+
 ## Song API
 This API controls which songs you want to play in the game stages.
 
